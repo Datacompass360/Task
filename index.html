@@ -3,138 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Management Dashboard</title>
+    <title>ClarityDesk 🖥️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Add a simple favicon to prevent 404 errors -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖥️</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; }
         /* Custom scrollbar for a cleaner look */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        .dark ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
         .dark ::-webkit-scrollbar-thumb { background: #4a5568; }
-        .dark ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #2d3748; }
 
         /* Drag and drop styles */
-        .kanban-column { min-height: 200px; }
-        .task-card.dragging { opacity: 0.5; transform: rotate(2deg); }
+        .kanban-column { min-height: 300px; }
+        .task-card.dragging { opacity: 0.5; transform: rotate(2deg); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
         
         /* Modal transition */
-        #item-modal, #modal-overlay {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        .modal-transition { transition: opacity 0.3s ease, transform 0.3s ease; }
+
+        /* Floating label styles */
+        .floating-label-group { position: relative; }
+        .floating-label-group .floating-label {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            transition: all 0.2s ease-in-out;
+            pointer-events: none;
+            color: #9ca3af;
+        }
+        .floating-label-group input:focus ~ .floating-label,
+        .floating-label-group input:not(:placeholder-shown) ~ .floating-label {
+            top: 0.5rem;
+            transform: translateY(0) scale(0.75);
+            color: #4f46e5;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased">
+<body class="bg-slate-50 dark:bg-gray-900 text-slate-800 dark:text-slate-200 font-sans antialiased">
 
     <!-- Main container -->
-    <div id="app-container" class="flex h-screen overflow-hidden">
+    <div id="app-container">
 
         <!-- Login Page -->
-        <div id="login-page" class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
-            <div class="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg">
-                <div class="text-center">
-                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-                        Sign in to your account
-                    </h2>
+        <div id="login-page" class="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-blue-500 p-4">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white/10 dark:bg-gray-800/20 backdrop-blur-xl rounded-2xl shadow-2xl">
+                <div class="text-center text-white">
+                    <h1 class="text-4xl font-bold">ClarityDesk 🖥️</h1>
+                    <p class="mt-2 text-indigo-200">Organize your work. Focus on what matters.</p>
                 </div>
                 <form id="login-form" class="mt-8 space-y-6">
-                    <div class="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:bg-gray-700 dark:text-white rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
-                        </div>
-                        <div>
-                            <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:bg-gray-700 dark:text-white rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
-                        </div>
+                     <div class="floating-label-group">
+                        <input id="email" name="email" type="email" autocomplete="email" required placeholder=" " class="block w-full px-4 py-3 bg-white/20 dark:bg-gray-700/30 text-white rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-transparent">
+                        <label for="email" class="floating-label">Email address</label>
                     </div>
-                    <p id="login-error" class="text-red-500 text-sm mt-2"></p>
+                    <div class="floating-label-group">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder=" " class="block w-full px-4 py-3 bg-white/20 dark:bg-gray-700/30 text-white rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-transparent">
+                        <label for="password" class="floating-label">Password</label>
+                    </div>
+                    
+                    <p id="login-error" class="text-red-300 text-sm mt-2 text-center"></p>
+
                     <div>
-                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-900">
                             Sign in
                         </button>
                     </div>
                 </form>
-                 <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                    Or
-                    <a href="#" id="signup-link" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        create an account
+                <div class="flex items-center justify-center space-x-2">
+                    <hr class="w-full border-gray-400">
+                    <span class="px-2 text-gray-300">OR</span>
+                    <hr class="w-full border-gray-400">
+                </div>
+                <div class="space-y-3">
+                    <button id="google-login-btn" class="w-full flex items-center justify-center py-2.5 px-4 rounded-lg bg-white/20 hover:bg-white/30 text-white">
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.986,35.62,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+                        Sign in with Google
+                    </button>
+                </div>
+                 <p class="mt-4 text-center text-sm text-indigo-200">
+                    <a href="#" id="signup-link" class="font-medium hover:text-white">
+                        Don't have an account? Sign up
                     </a>
                 </p>
             </div>
         </div>
 
         <!-- Dashboard -->
-        <div id="dashboard" class="hidden flex w-full">
-            <!-- Sidebar -->
-            <aside class="w-64 bg-white dark:bg-gray-800 p-4 flex flex-col shadow-lg">
-                <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-8">Dashboard</div>
-                <nav class="flex flex-col space-y-2">
-                    <a href="#" data-section="overview" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700">Overview</a>
-                    <a href="#" data-section="shortcuts" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Shortcuts</a>
-                    <a href="#" data-section="tasks" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Tasks</a>
-                    <a href="#" data-section="notes" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Notes</a>
-                    <a href="#" data-section="reminders" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Reminders</a>
-                    <a href="#" data-section="profile" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Profile</a>
-                </nav>
-                <div class="mt-auto">
-                    <div id="user-profile" class="flex items-center space-x-3 p-2 rounded-lg">
-                        <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold" id="user-initial"></div>
-                        <div>
-                            <p class="font-semibold text-sm" id="user-name">User Name</p>
-                            <p class="text-xs text-gray-500" id="user-email">user@example.com</p>
+        <div id="dashboard" class="hidden h-screen w-full">
+            <div class="flex h-full w-full">
+                <!-- Sidebar -->
+                <aside class="w-20 lg:w-64 bg-white dark:bg-gray-800 p-3 lg:p-4 flex flex-col shadow-lg transition-all duration-300">
+                    <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-8 hidden lg:block">ClarityDesk 🖥️</div>
+                    <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-8 lg:hidden text-center">🖥️</div>
+                    <nav class="flex flex-col space-y-2">
+                        <a href="#" data-section="overview" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl text-indigo-600 bg-indigo-100 dark:text-indigo-300 dark:bg-gray-700">
+                            <!-- SVG Icons for each nav link -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            <span class="ml-4 hidden lg:block">Overview</span>
+                        </a>
+                        <a href="#" data-section="shortcuts" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                           <span class="ml-4 hidden lg:block">Shortcuts</span>
+                        </a>
+                        <a href="#" data-section="tasks" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            <span class="ml-4 hidden lg:block">Tasks</span>
+                        </a>
+                        <a href="#" data-section="notes" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span class="ml-4 hidden lg:block">Notes</span>
+                        </a>
+                         <a href="#" data-section="reminders" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span class="ml-4 hidden lg:block">Reminders</span>
+                        </a>
+                    </nav>
+                    <div class="mt-auto">
+                         <a href="#" data-section="profile" class="nav-link flex items-center justify-center lg:justify-start p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span class="ml-4 hidden lg:block">Settings</span>
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <div class="flex-1 flex flex-col">
+                    <header class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg p-4 flex justify-between items-center shadow-sm border-b border-slate-200 dark:border-gray-700">
+                         <div class="relative w-full max-w-md">
+                            <input type="text" id="global-search" placeholder="Search anything..." class="w-full p-2 pl-10 rounded-lg border bg-slate-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                    </div>
-                    <button id="logout-btn" class="w-full mt-4 text-left p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-800">Logout</button>
+                        <div class="flex items-center space-x-4">
+                            <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                                <!-- Sun/Moon icon here -->
+                            </button>
+                            <div id="user-profile" class="flex items-center space-x-3 p-2 rounded-lg cursor-pointer">
+                                <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold" id="user-initial"></div>
+                                <div class="hidden md:block">
+                                    <p class="font-semibold text-sm" id="user-name">User Name</p>
+                                    <p class="text-xs text-gray-500" id="user-email">user@example.com</p>
+                                </div>
+                            </div>
+                            <button id="logout-btn" class="p-2 rounded-full text-slate-500 hover:bg-red-100 dark:hover:bg-red-800/50 hover:text-red-500" title="Logout">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                            </button>
+                        </div>
+                    </header>
+                    <main class="flex-1 p-6 overflow-y-auto">
+                        <!-- Dynamic Content Sections -->
+                        <div id="content-sections">
+                            <div id="overview-section" class="content-section"></div>
+                            <div id="shortcuts-section" class="content-section hidden"></div>
+                            <div id="tasks-section" class="content-section hidden"></div>
+                            <div id="notes-section" class="content-section hidden"></div>
+                            <div id="reminders-section" class="content-section hidden"></div>
+                            <div id="profile-section" class="content-section hidden"></div>
+                        </div>
+                    </main>
                 </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="flex-1 p-6 overflow-y-auto">
-                <header class="flex justify-between items-center mb-6">
-                     <div class="relative w-full max-w-md">
-                        <input type="text" id="global-search" placeholder="Search anything..." class="w-full p-2 pl-10 rounded-lg border bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                            <!-- Sun/Moon icon here -->
-                        </button>
-                    </div>
-                </header>
-
-                <!-- Dynamic Content Sections -->
-                <div id="content-sections">
-                    <!-- Overview Section -->
-                    <div id="overview-section" class="content-section"></div>
-                    <!-- Shortcuts Section -->
-                    <div id="shortcuts-section" class="content-section hidden"></div>
-                    <!-- Tasks Section -->
-                    <div id="tasks-section" class="content-section hidden"></div>
-                    <!-- Notes Section -->
-                    <div id="notes-section" class="content-section hidden"></div>
-                    <!-- Reminders Section -->
-                    <div id="reminders-section" class="content-section hidden"></div>
-                    <!-- Profile Section -->
-                    <div id="profile-section" class="content-section hidden"></div>
-                </div>
-            </main>
+            </div>
         </div>
     </div>
     
     <!-- Reusable Modal -->
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
-    <div id="item-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md hidden z-50 transform scale-95">
+    <div id="modal-overlay" class="fixed inset-0 bg-black/60 hidden z-40 modal-transition opacity-0"></div>
+    <div id="item-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md hidden z-50 modal-transition transform scale-95 opacity-0">
         <div class="flex justify-between items-center border-b pb-3 dark:border-gray-600">
             <h3 id="modal-title" class="text-xl font-semibold">Add Item</h3>
             <button id="modal-close-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
-        <div id="modal-body" class="mt-4">
-            <!-- Dynamic form content will be injected here -->
-        </div>
+        <div id="modal-body" class="mt-4"></div>
         <div id="modal-footer" class="mt-6 flex justify-end space-x-3 border-t pt-4 dark:border-gray-600">
             <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
             <button id="modal-save-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save</button>
@@ -142,10 +190,10 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 modal-transition opacity-0">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold">Confirm Deletion</h3>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Are you sure? This action cannot be undone.</p>
             <div class="mt-6 flex justify-end space-x-3">
                 <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
                 <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
@@ -157,11 +205,10 @@
     <script type="module">
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Provided Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB6W3bpYgKinmHbs-hgf2F_W3BQSwxfAwk",
             authDomain: "customer-experience-controls-2.firebaseapp.com",
@@ -172,15 +219,13 @@
             measurementId: "G-V4PF0XBT2J"
         };
         
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        setLogLevel('debug');
         
         // App state
         let currentUserId = null;
-        let unsubscribeShortcuts, unsubscribeTasks, unsubscribeNotes, unsubscribeReminders;
+        let unsubscribeListeners = [];
         let allShortcuts = [], allTasks = [], allNotes = [], allReminders = [];
 
         // DOM Elements
@@ -189,23 +234,22 @@
         const loginForm = document.getElementById('login-form');
         const signupLink = document.getElementById('signup-link');
         const loginError = document.getElementById('login-error');
+        const googleLoginBtn = document.getElementById('google-login-btn');
 
         // --- AUTHENTICATION ---
         onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
                 loginPage.style.display = 'none';
-                dashboard.style.display = 'flex';
+                dashboard.style.display = 'block';
                 updateUserInfo(user);
                 fetchAllData();
             } else {
                 currentUserId = null;
                 loginPage.style.display = 'flex';
                 dashboard.style.display = 'none';
-                if (unsubscribeShortcuts) unsubscribeShortcuts();
-                if (unsubscribeTasks) unsubscribeTasks();
-                if (unsubscribeNotes) unsubscribeNotes();
-                if (unsubscribeReminders) unsubscribeReminders();
+                unsubscribeListeners.forEach(unsub => unsub());
+                unsubscribeListeners = [];
             }
         });
 
@@ -213,87 +257,82 @@
             e.preventDefault();
             const email = loginForm.email.value;
             const password = loginForm.password.value;
-            const isSigningUp = signupLink.textContent.trim().toLowerCase().includes('sign in');
+            const isSigningUp = loginForm.querySelector('button[type="submit"]').textContent.includes('Sign up');
 
             loginError.textContent = '';
-
-            if (isSigningUp) {
-                createUserWithEmailAndPassword(auth, email, password)
-                    .then(userCredential => {
+            const action = isSigningUp ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
+            
+            action(auth, email, password)
+                .then(userCredential => {
+                    if (isSigningUp) {
                         updateProfile(userCredential.user, { displayName: email.split('@')[0] });
-                    })
-                    .catch(error => {
-                        loginError.textContent = error.message;
-                    });
-            } else {
-                signInWithEmailAndPassword(auth, email, password)
-                    .catch(error => {
-                        loginError.textContent = error.message;
-                    });
-            }
+                    }
+                })
+                .catch(error => { loginError.textContent = error.message; });
+        });
+
+        googleLoginBtn.addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(error => {
+                loginError.textContent = `Google Sign-In Error: ${error.message}`;
+            });
         });
 
         signupLink.addEventListener('click', (e) => {
             e.preventDefault();
-            const isSigningUp = signupLink.textContent.trim().toLowerCase().includes('sign in');
+            const isSigningUp = signupLink.textContent.includes('Sign up');
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            
             if (isSigningUp) {
-                loginForm.querySelector('button[type="submit"]').textContent = 'Sign in';
-                signupLink.innerHTML = `create an account`;
-                 document.querySelector('#login-page h2').textContent = 'Sign in to your account';
+                submitBtn.textContent = 'Sign up';
+                signupLink.textContent = 'Already have an account? Sign in';
             } else {
-                loginForm.querySelector('button[type="submit"]').textContent = 'Sign up';
-                signupLink.innerHTML = `Sign in instead`;
-                 document.querySelector('#login-page h2').textContent = 'Create a new account';
+                submitBtn.textContent = 'Sign in';
+                signupLink.textContent = 'Don’t have an account? Sign up';
             }
         });
 
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            signOut(auth);
-        });
+        document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
         function updateUserInfo(user) {
-            const userNameEl = document.getElementById('user-name');
-            const userEmailEl = document.getElementById('user-email');
-            const userInitialEl = document.getElementById('user-initial');
-            
-            if(user) {
-                const displayName = user.displayName || user.email;
-                userNameEl.textContent = displayName;
-                userEmailEl.textContent = user.email;
-                userInitialEl.textContent = (displayName?.[0] || 'U').toUpperCase();
-            }
+            if (!user) return;
+            const displayName = user.displayName || user.email;
+            document.getElementById('user-name').textContent = displayName;
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-initial').textContent = (displayName?.[0] || 'U').toUpperCase();
         }
 
         // --- NAVIGATION ---
         const navLinks = document.querySelectorAll('.nav-link');
-        const contentSections = document.querySelectorAll('.content-section');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const sectionId = link.dataset.section;
 
-                navLinks.forEach(l => {
-                    l.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-                });
-                link.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                navLinks.forEach(l => l.classList.remove('bg-indigo-100', 'dark:bg-gray-700', 'text-indigo-600', 'dark:text-indigo-300'));
+                link.classList.add('bg-indigo-100', 'dark:bg-gray-700', 'text-indigo-600', 'dark:text-indigo-300');
 
-                contentSections.forEach(section => {
-                    section.classList.add('hidden');
-                });
+                document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
                 document.getElementById(`${sectionId}-section`).classList.remove('hidden');
+                
+                // If profile/settings, render it
+                if (sectionId === 'profile') renderProfile();
             });
         });
 
         // --- DATA FETCHING & RENDERING ---
         function fetchAllData() {
             if (!currentUserId) return;
-            const appId = 'work-management-app'; // Example App ID
+            const appId = 'clarity-desk';
+
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
 
             const collections = ['shortcuts', 'tasks', 'notes', 'reminders'];
             collections.forEach(col => {
                 const q = query(collection(db, `artifacts/${appId}/users/${currentUserId}/${col}`), orderBy('createdAt', 'desc'));
                 
-                const unsubscribe = onSnapshot(q, (snapshot) => {
+                const unsub = onSnapshot(q, (snapshot) => {
                     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     switch(col) {
                         case 'shortcuts': allShortcuts = data; renderShortcuts(); break;
@@ -301,23 +340,15 @@
                         case 'notes': allNotes = data; renderNotes(); break;
                         case 'reminders': allReminders = data; renderReminders(); break;
                     }
-                    renderOverview(); // Update overview whenever any data changes
-                }, (error) => {
-                    console.error(`Error listening to ${col}:`, error);
-                });
-
-                // Store unsubscribe functions to call on logout
-                if (col === 'shortcuts') unsubscribeShortcuts = unsubscribe;
-                if (col === 'tasks') unsubscribeTasks = unsubscribe;
-                if (col === 'notes') unsubscribeNotes = unsubscribe;
-                if (col === 'reminders') unsubscribeReminders = unsubscribe;
+                    renderOverview();
+                }, (error) => console.error(`Error listening to ${col}:`, error));
+                unsubscribeListeners.push(unsub);
             });
         }
         
-        // --- RENDER FUNCTIONS (Templates for each section) ---
-
         function renderSection(sectionId, title, addButtonHTML, contentHTML) {
             const container = document.getElementById(`${sectionId}-section`);
+            if (!container) return;
             container.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold">${title}</h2>
@@ -329,19 +360,19 @@
         
         function renderShortcuts(shortcuts = allShortcuts) {
              renderSection('shortcuts', 'Shortcuts', 
-                `<button onclick="openModal('shortcut')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Shortcut</button>`,
-                `<div id="shortcuts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                `<button onclick="openModal('shortcut')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">Add Shortcut</button>`,
+                `<div id="shortcuts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${shortcuts.map(s => `
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between">
-                            <a href="${s.url}" target="_blank" class="flex items-center space-x-3 group">
-                                <img src="https://www.google.com/s2/favicons?domain=${s.url}&sz=32" alt="favicon" class="w-8 h-8">
-                                <span class="font-medium group-hover:text-indigo-500">${s.name}</span>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex items-center justify-between">
+                            <a href="${s.url}" target="_blank" class="flex items-center space-x-4 group overflow-hidden">
+                                <img src="https://www.google.com/s2/favicons?domain=${s.url}&sz=32" alt="favicon" class="w-8 h-8 flex-shrink-0">
+                                <span class="font-medium group-hover:text-indigo-500 truncate">${s.name}</span>
                             </a>
-                            <button onclick="confirmDeleteItem('shortcuts', '${s.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <button onclick="confirmDeleteItem('shortcuts', '${s.id}')" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500 flex-shrink-0">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                         </div>
-                    `).join('')}
+                    `).join('') || `<p class="text-center col-span-full text-gray-500">No shortcuts yet.</p>`}
                 </div>`
             );
         }
@@ -352,87 +383,108 @@
             const completed = tasks.filter(t => t.status === 'completed');
 
             const kanbanHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    ${renderKanbanColumn('Not Started', 'not-started', notStarted)}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    ${renderKanbanColumn('To Do', 'not-started', notStarted)}
                     ${renderKanbanColumn('In Progress', 'in-progress', inProgress)}
-                    ${renderKanbanColumn('Completed', 'completed', completed)}
+                    ${renderKanbanColumn('Done', 'completed', completed)}
                 </div>
             `;
             
             renderSection('tasks', 'Task Board', 
-                `<button onclick="openModal('task')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Task</button>`,
+                `<button onclick="openModal('task')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">Add Task</button>`,
                 kanbanHTML
             );
             
-            // Add drag and drop event listeners after rendering
             setupDragAndDrop();
         }
 
         function renderKanbanColumn(title, status, tasks) {
             return `
-                <div class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 class="font-bold mb-4 text-lg">${title} (${tasks.length})</h3>
+                <div class="bg-slate-100 dark:bg-gray-800/50 rounded-2xl p-4">
+                    <h3 class="font-bold mb-4 text-lg text-slate-600 dark:text-slate-300">${title} <span class="text-sm font-normal text-slate-400">(${tasks.length})</span></h3>
                     <div class="kanban-column space-y-4" data-status="${status}">
                         ${tasks.map(task => `
-                            <div class="task-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow cursor-grab" draggable="true" data-id="${task.id}">
+                            <div class="task-card bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-grab" draggable="true" data-id="${task.id}">
                                 <div class="flex justify-between items-start">
                                     <h4 class="font-semibold">${task.title}</h4>
-                                    <span class="text-xs px-2 py-1 rounded-full ${getPriorityClass(task.priority)}">${task.priority}</span>
+                                    <span class="text-xs px-2 py-1 rounded-full font-semibold ${getPriorityClass(task.priority)}">${getPriorityBadge(task.priority)}</span>
                                 </div>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${task.description}</p>
                                 <div class="text-xs text-gray-500 mt-3 flex justify-between items-center">
-                                    <span>Due: ${new Date(task.dueDate).toLocaleDateString()}</span>
-                                     <button onclick="confirmDeleteItem('tasks', '${task.id}')" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-red-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    <span class="font-medium">Due: ${new Date(task.dueDate).toLocaleDateString()}</span>
+                                     <button onclick="confirmDeleteItem('tasks', '${task.id}')" class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                     </button>
                                 </div>
                             </div>
                         `).join('')}
+                         ${tasks.length === 0 ? `<div class="text-center text-slate-400 py-8">Drop tasks here</div>` : ''}
                     </div>
                 </div>
             `;
         }
 
         function renderNotes(notes = allNotes) {
+            const pinnedNotes = notes.filter(n => n.pinned);
+            const otherNotes = notes.filter(n => !n.pinned);
+
             renderSection('notes', 'Notes', 
-                `<button onclick="openModal('note')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Note</button>`,
-                `<div id="notes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    ${notes.map(n => `
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col h-full">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-semibold text-lg mb-2">${n.title}</h3>
-                                <div class="flex space-x-2">
-                                    <button onclick="togglePinNote('${n.id}', ${n.pinned || false})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 ${n.pinned ? 'text-yellow-500' : ''}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>
-                                    </button>
-                                    <button onclick="confirmDeleteItem('notes', '${n.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
+                `<button onclick="openModal('note')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">Add Note</button>`,
+                `<div id="notes-list" class="space-y-6">
+                    ${pinnedNotes.length > 0 ? `
+                        <div>
+                            <h3 class="font-semibold text-slate-500 mb-2">Pinned</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${pinnedNotes.map(renderNoteCard).join('')}
                             </div>
-                            <p class="text-gray-600 dark:text-gray-400 flex-grow">${n.content.replace(/\n/g, '<br>')}</p>
-                            <p class="text-xs text-gray-400 mt-4">${new Date(n.createdAt?.toDate()).toLocaleString()}</p>
-                        </div>
-                    `).join('')}
+                        </div>` : ''}
+                    ${otherNotes.length > 0 ? `
+                        <div>
+                             <h3 class="font-semibold text-slate-500 mb-2">${pinnedNotes.length > 0 ? 'Other Notes' : ''}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${otherNotes.map(renderNoteCard).join('')}
+                            </div>
+                        </div>` : ''}
+                    ${notes.length === 0 ? `<p class="text-center text-gray-500">No notes yet.</p>` : ''}
                 </div>`
             );
         }
 
+        function renderNoteCard(n) {
+            return `
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex flex-col h-full">
+                <div class="flex justify-between items-start">
+                    <h3 class="font-semibold text-lg mb-2">${n.title}</h3>
+                    <div class="flex space-x-1">
+                        <button onclick="togglePinNote('${n.id}', ${n.pinned || false})" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 ${n.pinned ? 'text-yellow-500' : ''}">
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.868 2.884c.321-.772 1.305-.772 1.626 0l1.393 3.364a1 1 0 00.95.69h3.537c.818 0 1.147 1.05.548 1.58l-2.862 2.08a1 1 0 00-.364 1.118l1.093 3.364c.264.813-.655 1.5-1.353 1.05l-2.862-2.08a1 1 0 00-1.175 0l-2.862 2.08c-.698.45-1.617-.237-1.353-1.05l1.093-3.364a1 1 0 00-.364-1.118L2.09 8.518c-.599-.53-.27-1.58.548-1.58h3.537a1 1 0 00.95-.69L8.53 2.884z" /></svg>
+                        </button>
+                        <button onclick="confirmDeleteItem('notes', '${n.id}')" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 flex-grow whitespace-pre-wrap">${n.content}</p>
+                <p class="text-xs text-gray-400 mt-4">${new Date(n.createdAt?.toDate()).toLocaleString()}</p>
+            </div>
+            `;
+        }
+
         function renderReminders(reminders = allReminders) {
              renderSection('reminders', 'Reminders', 
-                `<button onclick="openModal('reminder')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Reminder</button>`,
-                `<div id="reminders-list" class="space-y-3">
+                `<button onclick="openModal('reminder')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">Add Reminder</button>`,
+                `<div id="reminders-list" class="space-y-4">
                     ${reminders.map(r => `
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between">
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex items-center justify-between">
                             <div>
                                 <p class="font-medium">${r.title}</p>
                                 <p class="text-sm text-gray-500">${new Date(r.dateTime).toLocaleString()}</p>
                             </div>
-                             <button onclick="confirmDeleteItem('reminders', '${r.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                             <button onclick="confirmDeleteItem('reminders', '${r.id}')" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                         </div>
-                    `).join('')}
+                    `).join('') || `<p class="text-center text-gray-500">No reminders yet.</p>`}
                 </div>`
             );
         }
@@ -440,26 +492,52 @@
         function renderOverview() {
             const container = document.getElementById('overview-section');
             const activeTasks = allTasks.filter(t => t.status !== 'completed').length;
-            const upcomingReminders = allReminders.filter(r => new Date(r.dateTime) > new Date()).length;
+            const completedTasks = allTasks.length - activeTasks;
+            const upcomingReminders = allReminders.filter(r => new Date(r.dateTime) > new Date()).sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
 
             container.innerHTML = `
                 <h2 class="text-3xl font-bold mb-6">Overview</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold">Active Tasks</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <!-- Stats Cards -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-lg font-semibold text-slate-500">Active Tasks</h3>
                         <p class="text-4xl font-bold text-indigo-500">${activeTasks}</p>
                     </div>
-                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold">Upcoming Reminders</h3>
-                        <p class="text-4xl font-bold text-green-500">${upcomingReminders}</p>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-lg font-semibold text-slate-500">Completed Tasks</h3>
+                        <p class="text-4xl font-bold text-green-500">${completedTasks}</p>
                     </div>
-                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold">Shortcuts</h3>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-lg font-semibold text-slate-500">Shortcuts</h3>
                         <p class="text-4xl font-bold text-blue-500">${allShortcuts.length}</p>
                     </div>
-                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold">Notes</h3>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-lg font-semibold text-slate-500">Notes</h3>
                         <p class="text-4xl font-bold text-yellow-500">${allNotes.length}</p>
+                    </div>
+
+                    <!-- Upcoming Reminder -->
+                    <div class="md:col-span-2 xl:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                         <h3 class="text-lg font-semibold text-slate-500 mb-4">Next Reminder</h3>
+                         ${upcomingReminders.length > 0 ? `
+                            <div>
+                                <p class="text-xl font-bold">${upcomingReminders[0].title}</p>
+                                <p class="text-md text-indigo-400">${new Date(upcomingReminders[0].dateTime).toLocaleString()}</p>
+                            </div>
+                         ` : `<p class="text-center text-gray-500">No upcoming reminders.</p>`}
+                    </div>
+
+                    <!-- Recent Notes -->
+                    <div class="md:col-span-2 xl:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                         <h3 class="text-lg font-semibold text-slate-500 mb-4">Recent Notes</h3>
+                         <div class="space-y-2">
+                            ${allNotes.slice(0, 3).map(note => `
+                                <div class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700">
+                                    <p class="font-semibold truncate">${note.title}</p>
+                                    <p class="text-sm text-slate-500 truncate">${note.content}</p>
+                                </div>
+                            `).join('') || `<p class="text-center text-gray-500">No recent notes.</p>`}
+                         </div>
                     </div>
                 </div>
             `;
@@ -468,47 +546,55 @@
         function renderProfile() {
             const user = auth.currentUser;
             if (!user) return;
-            renderSection('profile', 'Profile', '', `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow max-w-lg mx-auto">
-                    <div class="space-y-4">
+            renderSection('profile', 'Settings', '', `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
+                    <div class="space-y-6">
                         <div>
+                            <h3 class="text-lg font-semibold mb-2">Profile</h3>
                             <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
-                            <input type="text" id="displayName" value="${user.displayName || ''}" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="text" id="displayName" value="${user.displayName || ''}" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
                             <button id="updateNameBtn" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Update Name</button>
                         </div>
-                        <div class="border-t dark:border-gray-600 pt-4">
+                        <div class="border-t dark:border-gray-600 pt-6">
+                             <h3 class="text-lg font-semibold mb-2">Change Password</h3>
                              <label for="currentPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
-                            <input type="password" id="currentPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="password" id="currentPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
                             
                             <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">New Password</label>
-                            <input type="password" id="newPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="password" id="newPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
                             <button id="updatePasswordBtn" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Update Password</button>
                             <p id="password-message" class="text-sm mt-2"></p>
+                        </div>
+                         <div class="border-t dark:border-gray-600 pt-6">
+                            <h3 class="text-lg font-semibold mb-2">Export Data</h3>
+                            <p class="text-sm text-slate-500 mb-2">Download your data as CSV files.</p>
+                            <div class="flex space-x-2">
+                                <button id="exportTasksBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export Tasks</button>
+                                <button id="exportNotesBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Export Notes</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `);
 
-            document.getElementById('updateNameBtn').addEventListener('click', async () => {
+            // Add event listeners for profile actions
+            document.getElementById('updateNameBtn').onclick = async () => {
                 const newName = document.getElementById('displayName').value;
                 if (newName && newName !== user.displayName) {
                     await updateProfile(user, { displayName: newName });
                     updateUserInfo(user);
                     alert('Display name updated!');
                 }
-            });
-
-            document.getElementById('updatePasswordBtn').addEventListener('click', async () => {
+            };
+            document.getElementById('updatePasswordBtn').onclick = async () => {
                 const currentPassword = document.getElementById('currentPassword').value;
                 const newPassword = document.getElementById('newPassword').value;
                 const messageEl = document.getElementById('password-message');
-                
                 if(!currentPassword || !newPassword) {
-                    messageEl.textContent = "Please fill in both password fields.";
+                    messageEl.textContent = "Please fill in all password fields.";
                     messageEl.className = 'text-sm mt-2 text-red-500';
                     return;
                 }
-
                 try {
                     const credential = EmailAuthProvider.credential(user.email, currentPassword);
                     await reauthenticateWithCredential(user, credential);
@@ -519,7 +605,9 @@
                     messageEl.textContent = `Error: ${error.message}`;
                     messageEl.className = 'text-sm mt-2 text-red-500';
                 }
-            });
+            };
+            document.getElementById('exportTasksBtn').onclick = () => exportToCsv('tasks.csv', allTasks);
+            document.getElementById('exportNotesBtn').onclick = () => exportToCsv('notes.csv', allNotes);
         }
         
         // --- MODAL LOGIC ---
@@ -529,90 +617,87 @@
         const modalBody = document.getElementById('modal-body');
         const saveBtn = document.getElementById('modal-save-btn');
         
-        function getFormHTML(type) {
-            switch (type) {
-                case 'shortcut':
-                    return `
-                        <div class="space-y-4">
-                            <div>
-                                <label for="shortcutName" class="block text-sm font-medium">Name</label>
-                                <input type="text" id="shortcutName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label for="shortcutUrl" class="block text-sm font-medium">URL</label>
-                                <input type="url" id="shortcutUrl" placeholder="https://example.com" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                        </div>`;
-                case 'task':
-                    return `
-                        <div class="space-y-4">
-                            <div>
-                                <label for="taskTitle" class="block text-sm font-medium">Title</label>
-                                <input type="text" id="taskTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                             <div>
-                                <label for="taskDesc" class="block text-sm font-medium">Description</label>
-                                <textarea id="taskDesc" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="taskDueDate" class="block text-sm font-medium">Due Date</label>
-                                    <input type="date" id="taskDueDate" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                                </div>
-                                <div>
-                                    <label for="taskPriority" class="block text-sm font-medium">Priority</label>
-                                    <select id="taskPriority" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                                        <option>Low</option>
-                                        <option>Medium</option>
-                                        <option>High</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>`;
-                case 'note':
-                    return `
-                        <div class="space-y-4">
-                            <div>
-                                <label for="noteTitle" class="block text-sm font-medium">Title</label>
-                                <input type="text" id="noteTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                             <div>
-                                <label for="noteContent" class="block text-sm font-medium">Content</label>
-                                <textarea id="noteContent" rows="5" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
-                            </div>
-                        </div>`;
-                case 'reminder':
-                    return `
-                        <div class="space-y-4">
-                            <div>
-                                <label for="reminderTitle" class="block text-sm font-medium">Title</label>
-                                <input type="text" id="reminderTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label for="reminderDateTime" class="block text-sm font-medium">Date & Time</label>
-                                <input type="datetime-local" id="reminderDateTime" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
-                            </div>
-                        </div>`;
-                default:
-                    return '';
-            }
-        }
+        const getFormHTML = (type) => ({
+            'shortcut': `
+                <div class="space-y-4">
+                    <div>
+                        <label for="shortcutName" class="block text-sm font-medium">Name</label>
+                        <input type="text" id="shortcutName" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="shortcutUrl" class="block text-sm font-medium">URL</label>
+                        <input type="url" id="shortcutUrl" placeholder="https://example.com" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                </div>`,
+            'task': `
+                <div class="space-y-4">
+                    <div>
+                        <label for="taskTitle" class="block text-sm font-medium">Title</label>
+                        <input type="text" id="taskTitle" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                     <div>
+                        <label for="taskDesc" class="block text-sm font-medium">Description</label>
+                        <textarea id="taskDesc" rows="3" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="taskDueDate" class="block text-sm font-medium">Due Date</label>
+                            <input type="date" id="taskDueDate" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="taskPriority" class="block text-sm font-medium">Priority</label>
+                            <select id="taskPriority" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                                <option>Low</option>
+                                <option>Medium</option>
+                                <option>High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>`,
+            'note': `
+                <div class="space-y-4">
+                    <div>
+                        <label for="noteTitle" class="block text-sm font-medium">Title</label>
+                        <input type="text" id="noteTitle" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                     <div>
+                        <label for="noteContent" class="block text-sm font-medium">Content</label>
+                        <textarea id="noteContent" rows="5" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>`,
+            'reminder': `
+                <div class="space-y-4">
+                    <div>
+                        <label for="reminderTitle" class="block text-sm font-medium">Title</label>
+                        <input type="text" id="reminderTitle" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="reminderDateTime" class="block text-sm font-medium">Date & Time</label>
+                        <input type="datetime-local" id="reminderDateTime" class="mt-1 block w-full px-3 py-2 bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                    </div>
+                </div>`,
+        })[type] || '';
         
         window.openModal = (type) => {
             modalTitle.textContent = `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
             modalBody.innerHTML = getFormHTML(type);
             saveBtn.onclick = () => saveItem(type);
-
-            modal.classList.remove('hidden', 'scale-95');
+            modal.classList.remove('hidden');
             modalOverlay.classList.remove('hidden');
-            modal.classList.add('scale-100');
+            setTimeout(() => {
+                modal.classList.remove('scale-95', 'opacity-0');
+                modalOverlay.classList.remove('opacity-0');
+            }, 10);
         }
 
         function closeModal() {
-            modal.classList.add('scale-95');
-            modal.classList.add('hidden');
-            modalOverlay.classList.add('hidden');
-            modalBody.innerHTML = ''; // Clear content
+            modal.classList.add('scale-95', 'opacity-0');
+            modalOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalOverlay.classList.add('hidden');
+                modalBody.innerHTML = '';
+            }, 300);
         }
 
         document.getElementById('modal-close-btn').onclick = closeModal;
@@ -620,13 +705,10 @@
         modalOverlay.onclick = closeModal;
 
         async function saveItem(type) {
-            if (!currentUserId) return;
-            const appId = 'work-management-app';
+             if (!currentUserId) return;
+            const appId = 'clarity-desk';
             const collectionPath = `artifacts/${appId}/users/${currentUserId}/${type}s`;
-            let data = {
-                userId: currentUserId,
-                createdAt: serverTimestamp()
-            };
+            let data = { userId: currentUserId, createdAt: serverTimestamp() };
 
             try {
                 switch(type) {
@@ -655,26 +737,24 @@
                         if (!data.title || !data.dateTime) throw new Error("Title and date/time are required.");
                         break;
                 }
-                
+
                 await addDoc(collection(db, collectionPath), data);
                 closeModal();
             } catch (error) {
-                alert(`Error saving ${type}: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 console.error("Error adding document: ", error);
             }
         }
 
         // --- DELETE LOGIC ---
         const deleteModal = document.getElementById('delete-confirm-modal');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-        
         window.confirmDeleteItem = (collectionName, docId) => {
             deleteModal.classList.remove('hidden');
             deleteModal.classList.add('flex');
-            
-            confirmDeleteBtn.onclick = async () => {
-                const appId = 'work-management-app';
+            setTimeout(() => deleteModal.classList.remove('opacity-0'), 10);
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                const appId = 'clarity-desk';
                 const docRef = doc(db, `artifacts/${appId}/users/${currentUserId}/${collectionName}`, docId);
                 await deleteDoc(docRef);
                 closeDeleteModal();
@@ -682,48 +762,32 @@
         }
 
         function closeDeleteModal() {
-            deleteModal.classList.add('hidden');
-            deleteModal.classList.remove('flex');
+            deleteModal.classList.add('opacity-0');
+            setTimeout(() => deleteModal.classList.add('hidden'), 300);
         }
-        cancelDeleteBtn.onclick = closeDeleteModal;
-
+        document.getElementById('cancel-delete-btn').onclick = closeDeleteModal;
 
         // --- DARK MODE ---
         const darkModeToggle = document.getElementById('dark-mode-toggle');
-        const sunIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
-        const moonIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
+        const sunIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+        const moonIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
         
         const applyTheme = (theme) => {
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-                darkModeToggle.innerHTML = sunIcon;
-            } else {
-                document.documentElement.classList.remove('dark');
-                darkModeToggle.innerHTML = moonIcon;
-            }
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            darkModeToggle.innerHTML = theme === 'dark' ? sunIcon : moonIcon;
         };
-
-        // Load theme from localStorage
         const savedTheme = localStorage.getItem('theme') || 'light';
         applyTheme(savedTheme);
-
         darkModeToggle.addEventListener('click', () => {
             const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
             localStorage.setItem('theme', newTheme);
             applyTheme(newTheme);
         });
         
-        // --- HELPERS ---
-        function getPriorityClass(priority) {
-            switch(priority?.toLowerCase()) {
-                case 'high': return 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200';
-                case 'medium': return 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200';
-                case 'low': return 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200';
-                default: return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200';
-            }
-        }
+        // --- HELPERS & FEATURES ---
+        const getPriorityBadge = (p) => ({ 'High': '🔥 High', 'Medium': '⚡ Medium', 'Low': '⏳ Low' })[p] || p;
+        const getPriorityClass = (p) => ({ 'High': 'bg-red-100 text-red-800 dark:bg-red-800/50 dark:text-red-200', 'Medium': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/50 dark:text-yellow-200', 'Low': 'bg-green-100 text-green-800 dark:bg-green-800/50 dark:text-green-200'})[p] || '';
 
-        // --- DRAG AND DROP ---
         function setupDragAndDrop() {
             const tasks = document.querySelectorAll('.task-card');
             const columns = document.querySelectorAll('.kanban-column');
@@ -750,7 +814,7 @@
                         column.appendChild(draggedItem);
                         const taskId = draggedItem.dataset.id;
                         const newStatus = column.dataset.status;
-                        const appId = 'work-management-app';
+                        const appId = 'clarity-desk';
                         const taskRef = doc(db, `artifacts/${appId}/users/${currentUserId}/tasks`, taskId);
                         await updateDoc(taskRef, { status: newStatus });
                     }
@@ -758,24 +822,49 @@
             });
         }
         
-        // Pin Note
         window.togglePinNote = async (noteId, isPinned) => {
-            const appId = 'work-management-app';
+            const appId = 'clarity-desk';
             const noteRef = doc(db, `artifacts/${appId}/users/${currentUserId}/notes`, noteId);
             await updateDoc(noteRef, { pinned: !isPinned });
         };
         
-        // Global Search
         document.getElementById('global-search').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            renderShortcuts(allShortcuts.filter(s => s.name.toLowerCase().includes(searchTerm)));
-            renderTasks(allTasks.filter(t => t.title.toLowerCase().includes(searchTerm) || t.description.toLowerCase().includes(searchTerm)));
-            renderNotes(allNotes.filter(n => n.title.toLowerCase().includes(searchTerm) || n.content.toLowerCase().includes(searchTerm)));
-            renderReminders(allReminders.filter(r => r.title.toLowerCase().includes(searchTerm)));
+            const term = e.target.value.toLowerCase();
+            renderShortcuts(allShortcuts.filter(s => s.name.toLowerCase().includes(term)));
+            renderTasks(allTasks.filter(t => t.title.toLowerCase().includes(term) || t.description.toLowerCase().includes(term)));
+            renderNotes(allNotes.filter(n => n.title.toLowerCase().includes(term) || n.content.toLowerCase().includes(term)));
+            renderReminders(allReminders.filter(r => r.title.toLowerCase().includes(term)));
         });
 
-        // Initial render of dynamic sections on load
-        renderProfile(); // Render profile section template
+        function exportToCsv(filename, rows) {
+            if (!rows || rows.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+            const headers = Object.keys(rows[0]).filter(h => !['userId'].includes(h));
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => headers.map(header => {
+                    let val = row[header];
+                    if (header === 'createdAt' && val?.toDate) val = val.toDate().toISOString();
+                    const str = String(val || '').replace(/"/g, '""');
+                    return `"${str}"`;
+                }).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        
     </script>
 </body>
 </html>
