@@ -4,1019 +4,778 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Work Management Dashboard</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Add a simple favicon to prevent 404 errors -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .sidebar-link {
-            transition: all 0.2s ease-in-out;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            background-color: #3b82f6; /* blue-500 */
-            color: white;
-        }
-        .modal-backdrop {
-            background-color: rgba(0,0,0,0.5);
-            transition: opacity 0.3s ease-in-out;
-        }
-        /* Custom scrollbar for dark mode */
-        .dark ::-webkit-scrollbar {
-            width: 8px;
-        }
-        .dark ::-webkit-scrollbar-track {
-            background: #1f2937; /* gray-800 */
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #4b5563; /* gray-600 */
-            border-radius: 4px;
-        }
-        .dark ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280; /* gray-500 */
-        }
-        .task-card, .note-card, .shortcut-item, .reminder-item, .stat-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .task-card:hover, .note-card:hover, .shortcut-item:hover, .reminder-item:hover, .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .task-card {
-            cursor: grab;
-        }
-        .task-card:active {
-            cursor: grabbing;
-        }
-        .kanban-column {
-            min-height: 400px;
-        }
-        .dragging {
-            opacity: 0.5;
-            border: 2px dashed #3b82f6;
-        }
-        .drag-over {
-            background-color: rgba(59, 130, 246, 0.1);
-        }
-        
-        .priority-low { background-color: #d1fae5; color: #065f46; border-left-color: #10b981; }
-        .priority-medium { background-color: #fef3c7; color: #92400e; border-left-color: #f59e0b; }
-        .priority-high { background-color: #fee2e2; color: #991b1b; border-left-color: #ef4444; }
-        
-        .dark .priority-low { background-color: #064e3b; color: #a7f3d0; }
-        .dark .priority-medium { background-color: #78350f; color: #fde68a; }
-        .dark .priority-high { background-color: #7f1d1d; color: #fecaca; }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .dark ::-webkit-scrollbar-track { background: #2d3748; }
+        .dark ::-webkit-scrollbar-thumb { background: #4a5568; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #718096; }
 
-        .note-card.pinned {
-            border-left: 4px solid #f59e0b; /* amber-500 */
+        /* Drag and drop styles */
+        .kanban-column { min-height: 200px; }
+        .task-card.dragging { opacity: 0.5; transform: rotate(2deg); }
+        
+        /* Modal transition */
+        #item-modal, #modal-overlay {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased">
 
-    <!-- App Container -->
-    <div id="app">
+    <!-- Main container -->
+    <div id="app-container" class="flex h-screen overflow-hidden">
+
         <!-- Login Page -->
-        <div id="login-page" class="flex items-center justify-center min-h-screen">
-            <div class="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+        <div id="login-page" class="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+            <div class="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg">
                 <div class="text-center">
-                    <svg class="mx-auto h-12 w-auto text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h2 class="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h2>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Sign in to manage your work</p>
+                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+                        Sign in to your account
+                    </h2>
                 </div>
-                <form id="login-form" class="space-y-6">
-                    <div class="relative">
-                         <input id="email" name="email" type="email" required class="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 dark:text-white dark:border-gray-600 dark:bg-gray-800 focus:outline-none focus:border-blue-600 placeholder-transparent" placeholder="Email address">
-                         <label for="email" class="absolute left-0 -top-3.5 text-gray-600 dark:text-gray-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-blue-600 peer-focus:text-sm">Email address</label>
+                <form id="login-form" class="mt-8 space-y-6">
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:bg-gray-700 dark:text-white rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Email address">
+                        </div>
+                        <div>
+                            <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:bg-gray-700 dark:text-white rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+                        </div>
                     </div>
-                    <div class="relative">
-                         <input id="password" name="password" type="password" required class="peer h-10 w-full border-b-2 border-gray-300 text-gray-900 dark:text-white dark:border-gray-600 dark:bg-gray-800 focus:outline-none focus:border-blue-600 placeholder-transparent" placeholder="Password">
-                         <label for="password" class="absolute left-0 -top-3.5 text-gray-600 dark:text-gray-400 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-blue-600 peer-focus:text-sm">Password</label>
-                    </div>
-                    <p id="auth-error" class="text-red-500 text-sm text-center"></p>
-                    <div class="flex items-center justify-between">
-                         <a href="#" id="toggle-signup" class="text-sm text-blue-600 hover:underline">Create an account</a>
-                    </div>
+                    <p id="login-error" class="text-red-500 text-sm mt-2"></p>
                     <div>
-                        <button type="submit" id="auth-button" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Sign in
                         </button>
                     </div>
                 </form>
+                 <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Or
+                    <a href="#" id="signup-link" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        create an account
+                    </a>
+                </p>
             </div>
         </div>
 
         <!-- Dashboard -->
-        <div id="dashboard" class="hidden">
-            <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
-                <!-- Sidebar -->
-                <div id="sidebar" class="w-64 bg-white dark:bg-gray-800 shadow-lg flex flex-col p-4 transition-all duration-300 -translate-x-full md:translate-x-0">
-                    <div class="flex items-center mb-8">
-                        <svg class="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <h1 class="ml-3 text-2xl font-bold text-gray-800 dark:text-white">WorkFlow</h1>
+        <div id="dashboard" class="hidden flex w-full">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-white dark:bg-gray-800 p-4 flex flex-col shadow-lg">
+                <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-8">Dashboard</div>
+                <nav class="flex flex-col space-y-2">
+                    <a href="#" data-section="overview" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700">Overview</a>
+                    <a href="#" data-section="shortcuts" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Shortcuts</a>
+                    <a href="#" data-section="tasks" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Tasks</a>
+                    <a href="#" data-section="notes" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Notes</a>
+                    <a href="#" data-section="reminders" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Reminders</a>
+                    <a href="#" data-section="profile" class="nav-link flex items-center p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Profile</a>
+                </nav>
+                <div class="mt-auto">
+                    <div id="user-profile" class="flex items-center space-x-3 p-2 rounded-lg">
+                        <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold" id="user-initial"></div>
+                        <div>
+                            <p class="font-semibold text-sm" id="user-name">User Name</p>
+                            <p class="text-xs text-gray-500" id="user-email">user@example.com</p>
+                        </div>
                     </div>
-                    <nav class="flex-1 space-y-2">
-                         <a href="#overview" class="nav-link sidebar-link flex items-center p-3 rounded-lg">
-                            <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>
-                            Overview
-                        </a>
-                        <a href="#shortcuts" class="nav-link sidebar-link flex items-center p-3 rounded-lg">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                            Shortcuts
-                        </a>
-                        <a href="#tasks" class="nav-link sidebar-link flex items-center p-3 rounded-lg">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                            Tasks
-                        </a>
-                        <a href="#notes" class="nav-link sidebar-link flex items-center p-3 rounded-lg">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            Notes
-                        </a>
-                        <a href="#reminders" class="nav-link sidebar-link flex items-center p-3 rounded-lg">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                            Reminders
-                        </a>
-                    </nav>
-                    <div class="mt-auto">
-                        <a href="#profile" class="nav-link sidebar-link flex items-center p-3 rounded-lg mb-2">
-                           <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                            Profile
-                         </a>
-                         <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-700">
-                              <p id="user-display-name" class="text-sm font-medium text-center truncate"></p>
-                         </div>
-                         <button id="logout-button" class="w-full mt-4 flex items-center justify-center p-3 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors duration-200">
-                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                            Logout
-                         </button>
-                    </div>
+                    <button id="logout-btn" class="w-full mt-4 text-left p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-800">Logout</button>
                 </div>
+            </aside>
 
-                <!-- Main Content -->
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <header class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 shadow">
-                        <button id="menu-button" class="md:hidden text-gray-600 dark:text-gray-300">
-                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            <!-- Main Content -->
+            <main class="flex-1 p-6 overflow-y-auto">
+                <header class="flex justify-between items-center mb-6">
+                     <div class="relative w-full max-w-md">
+                        <input type="text" id="global-search" placeholder="Search anything..." class="w-full p-2 pl-10 rounded-lg border bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="dark-mode-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <!-- Sun/Moon icon here -->
                         </button>
-                        <div class="relative w-full max-w-md">
-                            <input id="search-bar" type="text" placeholder="Search everywhere..." class="w-full py-2 pl-10 pr-4 rounded-full bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
-                         <div class="flex items-center space-x-4 ml-4">
-                            <button id="dark-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
-                                <svg id="theme-icon-light" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                            </button>
-                        </div>
-                    </header>
-                    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
-                        <div id="content">
-                            <!-- Content for each section will be injected here -->
-                        </div>
-                    </main>
+                    </div>
+                </header>
+
+                <!-- Dynamic Content Sections -->
+                <div id="content-sections">
+                    <!-- Overview Section -->
+                    <div id="overview-section" class="content-section"></div>
+                    <!-- Shortcuts Section -->
+                    <div id="shortcuts-section" class="content-section hidden"></div>
+                    <!-- Tasks Section -->
+                    <div id="tasks-section" class="content-section hidden"></div>
+                    <!-- Notes Section -->
+                    <div id="notes-section" class="content-section hidden"></div>
+                    <!-- Reminders Section -->
+                    <div id="reminders-section" class="content-section hidden"></div>
+                    <!-- Profile Section -->
+                    <div id="profile-section" class="content-section hidden"></div>
                 </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Reusable Modal -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+    <div id="item-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md hidden z-50 transform scale-95">
+        <div class="flex justify-between items-center border-b pb-3 dark:border-gray-600">
+            <h3 id="modal-title" class="text-xl font-semibold">Add Item</h3>
+            <button id="modal-close-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div id="modal-body" class="mt-4">
+            <!-- Dynamic form content will be injected here -->
+        </div>
+        <div id="modal-footer" class="mt-6 flex justify-end space-x-3 border-t pt-4 dark:border-gray-600">
+            <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+            <button id="modal-save-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save</button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold">Confirm Deletion</h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- Section Templates -->
-    <template id="overview-template">
-        <div>
-            <h2 class="text-3xl font-bold mb-6">Dashboard Overview</h2>
-            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"></div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="font-bold text-xl mb-4">Upcoming Reminders</h3>
-                    <div id="overview-reminders-list" class="space-y-3"></div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="font-bold text-xl mb-4">Weekly Task Progress</h3>
-                    <div id="overview-tasks-progress"></div>
-                </div>
-            </div>
-        </div>
-    </template>
-    
-    <template id="profile-template">
-        <div>
-             <h2 class="text-3xl font-bold mb-6">User Profile</h2>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                     <h3 class="font-semibold text-xl mb-4">Profile Information</h3>
-                     <form id="profile-form" class="space-y-4">
-                         <div>
-                            <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Name</label>
-                            <input type="text" id="displayName" name="displayName" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                         </div>
-                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                            <p id="profile-email" class="text-gray-500 dark:text-gray-400"></p>
-                         </div>
-                         <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Save Changes</button>
-                         <p id="profile-success" class="text-green-500 text-sm text-center"></p>
-                     </form>
-                 </div>
-                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                     <h3 class="font-semibold text-xl mb-4">Change Password</h3>
-                     <form id="password-form" class="space-y-4">
-                          <div>
-                            <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                            <input type="password" id="newPassword" name="newPassword" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                         </div>
-                         <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Update Password</button>
-                         <p id="password-success" class="text-green-500 text-sm text-center"></p>
-                         <p id="password-error" class="text-red-500 text-sm text-center"></p>
-                     </form>
-                 </div>
-             </div>
-        </div>
-    </template>
-    
-    <template id="search-results-template">
-         <div>
-            <h2 class="text-3xl font-bold mb-6">Search Results for "<span id="search-term-display"></span>"</h2>
-            <div id="search-results-container" class="space-y-4"></div>
-        </div>
-    </template>
 
-    <template id="shortcuts-template">
-        <div class="space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-3xl font-bold">Shortcuts</h2>
-                <button id="add-shortcut-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add Shortcut</button>
-            </div>
-            <div id="shortcuts-list" class="space-y-3"></div>
-        </div>
-    </template>
-    
-    <template id="tasks-template">
-         <div class="space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-3xl font-bold">Task Board</h2>
-                <button id="add-task-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add Task</button>
-            </div>
-            <div id="tasks-board" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 class="font-bold text-lg mb-4 text-center">Not Started</h3>
-                    <div id="tasks-not-started" class="kanban-column space-y-4" data-status="Not Started"></div>
-                </div>
-                 <div class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 class="font-bold text-lg mb-4 text-center">In Progress</h3>
-                    <div id="tasks-in-progress" class="kanban-column space-y-4" data-status="In Progress"></div>
-                </div>
-                 <div class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4">
-                    <h3 class="font-bold text-lg mb-4 text-center">Completed</h3>
-                    <div id="tasks-completed" class="kanban-column space-y-4" data-status="Completed"></div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <template id="notes-template">
-        <div class="space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-3xl font-bold">Notes</h2>
-                <button id="add-note-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add Note</button>
-            </div>
-            <div id="notes-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
-        </div>
-    </template>
-
-    <template id="reminders-template">
-         <div class="space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-3xl font-bold">Reminders</h2>
-                <button id="add-reminder-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add Reminder</button>
-            </div>
-            <div id="reminders-list" class="space-y-4"></div>
-        </div>
-    </template>
-
-    <!-- Modals -->
-    <div id="modal-container"></div>
-    
-    <template id="modal-template">
-        <div class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md m-4 transform transition-all opacity-0 -translate-y-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold"></h3>
-                    <button class="close-modal-btn text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-                <form id="modal-form">
-                    <!-- Form content goes here -->
-                </form>
-            </div>
-        </div>
-    </template>
-
-    <!-- Firebase SDK -->
     <script type="module">
-        // Import Firebase modules
+        // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            onAuthStateChanged, 
-            signOut,
-            updateProfile,
-            updatePassword,
-            reauthenticateWithCredential,
-            EmailAuthProvider,
-            signInWithCustomToken,
-            signInAnonymously
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            getDocs,
-            onSnapshot,
-            doc,
-            getDoc,
-            setDoc,
-            updateDoc,
-            deleteDoc,
-            query,
-            where,
-            orderBy,
-            limit
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, query, where, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config)
-            : {
-                apiKey: "AIzaSyB6W3bpYgKinmHbs-hgf2F_W3BQSwxfAwk",
-                authDomain: "customer-experience-controls-2.firebaseapp.com",
-                projectId: "customer-experience-controls-2",
-                storageBucket: "customer-experience-controls-2.appspot.com",
-                messagingSenderId: "144837337826",
-                appId: "1:144837337826:web:63c952a42599279d4534bb",
-                measurementId: "G-V4PF0XBT2J"
-            };
+        // Provided Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6W3bpYgKinmHbs-hgf2F_W3BQSwxfAwk",
+            authDomain: "customer-experience-controls-2.firebaseapp.com",
+            projectId: "customer-experience-controls-2",
+            storageBucket: "customer-experience-controls-2.appspot.com",
+            messagingSenderId: "144837337826",
+            appId: "1:144837337826:web:63c952a42599279d4534bb",
+            measurementId: "G-V4PF0XBT2J"
+        };
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
+        setLogLevel('debug');
+        
+        // App state
         let currentUserId = null;
-        let unsubscribeListeners = [];
-        let allDataCache = { shortcuts: [], tasks: [], notes: [], reminders: [] };
+        let unsubscribeShortcuts, unsubscribeTasks, unsubscribeNotes, unsubscribeReminders;
+        let allShortcuts = [], allTasks = [], allNotes = [], allReminders = [];
 
-        // App State
-        let isSignUp = false;
-
-        // UI Elements
+        // DOM Elements
         const loginPage = document.getElementById('login-page');
         const dashboard = document.getElementById('dashboard');
-        const authForm = document.getElementById('login-form');
-        const authButton = document.getElementById('auth-button');
-        const toggleSignupLink = document.getElementById('toggle-signup');
-        const authError = document.getElementById('auth-error');
-        const userDisplayName = document.getElementById('user-display-name');
-        const logoutButton = document.getElementById('logout-button');
-        const contentContainer = document.getElementById('content');
-        const navLinks = document.querySelectorAll('.nav-link');
-        const searchBar = document.getElementById('search-bar');
-        const menuButton = document.getElementById('menu-button');
-        const sidebar = document.getElementById('sidebar');
-
-        // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
-        const themeIconLight = document.getElementById('theme-icon-light');
-        const themeIconDark = document.getElementById('theme-icon-dark');
-        
-        const applyTheme = (theme) => {
-             if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-                themeIconLight.classList.add('hidden');
-                themeIconDark.classList.remove('hidden');
-            } else {
-                document.documentElement.classList.remove('dark');
-                themeIconLight.classList.remove('hidden');
-                themeIconDark.classList.add('hidden');
-            }
-        };
-
-        darkModeToggle.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            const newTheme = isDark ? 'dark' : 'light';
-            localStorage.theme = newTheme;
-            applyTheme(newTheme);
-            if (currentUserId) {
-                const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'theme');
-                setDoc(settingsRef, { mode: newTheme });
-            }
-        });
-        
-        const fetchAndApplyThemePreference = async () => {
-            if (currentUserId) {
-                const settingsRef = doc(db, `artifacts/${appId}/users/${currentUserId}/settings`, 'theme');
-                const docSnap = await getDoc(settingsRef);
-                if (docSnap.exists() && docSnap.data().mode) {
-                    localStorage.theme = docSnap.data().mode;
-                    applyTheme(docSnap.data().mode);
-                    return;
-                }
-            }
-            // Fallback to local storage or system preference
-             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                applyTheme('dark');
-            } else {
-                applyTheme('light');
-            }
-        };
-
-        // Mobile sidebar toggle
-        menuButton.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-        });
-        document.addEventListener('click', (e) => {
-            if (!sidebar.contains(e.target) && !menuButton.contains(e.target) && !sidebar.classList.contains('-translate-x-full')) {
-                 sidebar.classList.add('-translate-x-full');
-            }
-        });
+        const loginForm = document.getElementById('login-form');
+        const signupLink = document.getElementById('signup-link');
+        const loginError = document.getElementById('login-error');
 
         // --- AUTHENTICATION ---
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, user => {
             if (user) {
                 currentUserId = user.uid;
-                userDisplayName.textContent = user.displayName || user.email;
-                loginPage.classList.add('hidden');
-                dashboard.classList.remove('hidden');
-                fetchAndApplyThemePreference();
-                navigateTo(window.location.hash || '#overview');
-                setupRealtimeListeners();
+                loginPage.style.display = 'none';
+                dashboard.style.display = 'flex';
+                updateUserInfo(user);
+                fetchAllData();
             } else {
                 currentUserId = null;
-                loginPage.classList.remove('hidden');
-                dashboard.classList.add('hidden');
-                // Cleanup listeners
-                unsubscribeListeners.forEach(unsub => unsub());
-                unsubscribeListeners = [];
+                loginPage.style.display = 'flex';
+                dashboard.style.display = 'none';
+                if (unsubscribeShortcuts) unsubscribeShortcuts();
+                if (unsubscribeTasks) unsubscribeTasks();
+                if (unsubscribeNotes) unsubscribeNotes();
+                if (unsubscribeReminders) unsubscribeReminders();
             }
         });
-        
-        // Auto-login with provided token if available
-        (async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } catch (error) {
-                    console.error("Failed to sign in with custom token:", error);
-                    await signInAnonymously(auth);
-                }
-            } else if (!auth.currentUser) {
-                // Only show login form if no token and no user
-                loginPage.classList.remove('hidden');
-            }
-        })();
 
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            const isSigningUp = signupLink.textContent.trim().toLowerCase().includes('sign in');
 
-        const updateAuthUI = () => {
-            if (isSignUp) {
-                authButton.textContent = 'Create account';
-                toggleSignupLink.textContent = 'Already have an account? Sign in';
+            loginError.textContent = '';
+
+            if (isSigningUp) {
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(userCredential => {
+                        updateProfile(userCredential.user, { displayName: email.split('@')[0] });
+                    })
+                    .catch(error => {
+                        loginError.textContent = error.message;
+                    });
             } else {
-                authButton.textContent = 'Sign in';
-                toggleSignupLink.textContent = 'Create an account';
-            }
-            authError.textContent = '';
-        };
-
-        toggleSignupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            isSignUp = !isSignUp;
-            updateAuthUI();
-        });
-
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = authForm.email.value;
-            const password = authForm.password.value;
-            authError.textContent = '';
-            try {
-                if (isSignUp) {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                } else {
-                    await signInWithEmailAndPassword(auth, email, password);
-                }
-            } catch (error) {
-                authError.textContent = error.message;
+                signInWithEmailAndPassword(auth, email, password)
+                    .catch(error => {
+                        loginError.textContent = error.message;
+                    });
             }
         });
 
-        logoutButton.addEventListener('click', async () => {
-            await signOut(auth);
+        signupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isSigningUp = signupLink.textContent.trim().toLowerCase().includes('sign in');
+            if (isSigningUp) {
+                loginForm.querySelector('button[type="submit"]').textContent = 'Sign in';
+                signupLink.innerHTML = `create an account`;
+                 document.querySelector('#login-page h2').textContent = 'Sign in to your account';
+            } else {
+                loginForm.querySelector('button[type="submit"]').textContent = 'Sign up';
+                signupLink.innerHTML = `Sign in instead`;
+                 document.querySelector('#login-page h2').textContent = 'Create a new account';
+            }
         });
 
-        // --- ROUTING ---
-        const navigateTo = (hash) => {
-            const section = hash.substring(1).split('?')[0]; // Ignore query params for routing
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        function updateUserInfo(user) {
+            const userNameEl = document.getElementById('user-name');
+            const userEmailEl = document.getElementById('user-email');
+            const userInitialEl = document.getElementById('user-initial');
             
-            navLinks.forEach(link => {
-                if (link.getAttribute('href') === `#${section}`) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-
-            switch(section) {
-                case 'tasks': renderSection('tasks'); break;
-                case 'notes': renderSection('notes'); break;
-                case 'reminders': renderSection('reminders'); break;
-                case 'shortcuts': renderSection('shortcuts'); break;
-                case 'profile': renderSection('profile'); break;
-                case 'overview':
-                default:
-                    renderSection('overview');
-                    break;
-            }
-        };
-
-        window.addEventListener('hashchange', () => navigateTo(window.location.hash));
-
-        const renderSection = (section) => {
-             const template = document.getElementById(`${section}-template`);
-             if (template) {
-                contentContainer.innerHTML = '';
-                contentContainer.appendChild(template.content.cloneNode(true));
-                setupSectionUI(section);
-             }
-        }
-        
-        const setupSectionUI = (section) => {
-             switch(section) {
-                case 'overview': renderOverview(); break;
-                case 'profile': renderProfile(); break;
-                case 'shortcuts': document.getElementById('add-shortcut-btn').addEventListener('click', () => openModal('shortcut')); break;
-                case 'tasks': 
-                    document.getElementById('add-task-btn').addEventListener('click', () => openModal('task'));
-                    setupDragAndDrop();
-                    renderTasks(allDataCache.tasks);
-                    break;
-                case 'notes': document.getElementById('add-note-btn').addEventListener('click', () => openModal('note')); break;
-                case 'reminders': document.getElementById('add-reminder-btn').addEventListener('click', () => openModal('reminder')); break;
+            if(user) {
+                const displayName = user.displayName || user.email;
+                userNameEl.textContent = displayName;
+                userEmailEl.textContent = user.email;
+                userInitialEl.textContent = (displayName?.[0] || 'U').toUpperCase();
             }
         }
-        
-        // --- REALTIME LISTENERS ---
-        const setupRealtimeListeners = () => {
-             if (!currentUserId) return;
-             
-             unsubscribeListeners.forEach(unsub => unsub());
-             unsubscribeListeners = [];
 
-             const collections = ['shortcuts', 'tasks', 'notes', 'reminders'];
-             collections.forEach(col => {
-                 const q = query(getCollectionRef(col));
-                 const unsub = onSnapshot(q, (snapshot) => {
-                     allDataCache[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                     const currentSection = (window.location.hash.substring(1) || 'overview').split('?')[0];
-                     
-                     switch (col) {
-                         case 'shortcuts': if(currentSection === 'shortcuts') renderShortcuts(allDataCache.shortcuts); break;
-                         case 'tasks': if(currentSection === 'tasks') renderTasks(allDataCache.tasks); break;
-                         case 'notes': if(currentSection === 'notes') renderNotes(allDataCache.notes); break;
-                         case 'reminders': if(currentSection === 'reminders') renderReminders(allDataCache.reminders); break;
-                     }
-                     if(currentSection === 'overview') renderOverview();
-                 }, (error) => {
-                     console.error(`Error listening to ${col}:`, error);
-                 });
-                 unsubscribeListeners.push(unsub);
-             });
-        }
-        
-        // --- RENDERING FUNCTIONS ---
-        const renderShortcuts = (shortcuts) => {
-            const list = document.getElementById('shortcuts-list');
-            if (!list) return;
-            list.innerHTML = shortcuts.length ? '' : '<p class="text-gray-500">No shortcuts yet. Add one to get started!</p>';
-            shortcuts.sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'shortcut-item bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between';
-                const domain = new URL(s.url).hostname;
-                item.innerHTML = `
-                    <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="flex items-center flex-1 truncate text-blue-500 hover:underline">
-                        <img src="https://www.google.com/s2/favicons?sz=32&domain_url=${domain}" alt="favicon" class="w-6 h-6 mr-4 rounded" onerror="this.style.display='none'">
-                        <div class="truncate">
-                          <span class="font-semibold">${s.name}</span>
-                          <p class="text-sm text-gray-500 dark:text-gray-400 truncate">${s.url}</p>
-                        </div>
-                    </a>
-                    <div class="flex items-center space-x-2 ml-4">
-                        <button class="edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${s.id}"><svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg></button>
-                        <button class="delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${s.id}"><svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    </div>
-                `;
-                item.querySelector('.edit-btn').addEventListener('click', () => openModal('shortcut', s));
-                item.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('shortcuts', s.id));
-                list.appendChild(item);
-            });
-        }
-        
-        const renderTasks = (tasks) => {
-            const notStartedCol = document.getElementById('tasks-not-started');
-            const inProgressCol = document.getElementById('tasks-in-progress');
-            const completedCol = document.getElementById('tasks-completed');
-            if (!notStartedCol) return; 
+        // --- NAVIGATION ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const contentSections = document.querySelectorAll('.content-section');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.dataset.section;
 
-            notStartedCol.innerHTML = '';
-            inProgressCol.innerHTML = '';
-            completedCol.innerHTML = '';
-
-            tasks.forEach(t => {
-                const card = document.createElement('div');
-                card.id = `task-${t.id}`;
-                card.draggable = true;
-                const isOverdue = t.status !== 'Completed' && moment(t.dueDate).isBefore(moment(), 'day');
-                const priorityClass = `priority-${(t.priority || 'low').toLowerCase()}`;
-
-                card.className = `task-card bg-white dark:bg-gray-800 p-4 rounded-lg shadow border-l-4 ${priorityClass}`;
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                             <h4 class="font-bold text-md">${t.title}</h4>
-                             <span class="text-xs font-semibold px-2 py-1 rounded-full ${priorityClass}">${t.priority}</span>
-                        </div>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">${t.description || ''}</p>
-                    </div>
-                    <div class="flex justify-between items-center text-xs">
-                        <p class="font-medium ${isOverdue ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}">
-                            <svg class="w-4 h-4 inline -mt-1 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            ${moment(t.dueDate).format('MMM D')}
-                        </p>
-                         <div class="flex items-center space-x-1">
-                             <button class="edit-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${t.id}"><svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg></button>
-                             <button class="delete-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${t.id}"><svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                         </div>
-                    </div>
-                `;
-                card.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', t.id);
-                    setTimeout(() => card.classList.add('dragging'), 0);
+                navLinks.forEach(l => {
+                    l.classList.remove('bg-gray-200', 'dark:bg-gray-700');
                 });
-                card.addEventListener('dragend', () => card.classList.remove('dragging'));
+                link.classList.add('bg-gray-200', 'dark:bg-gray-700');
 
-                card.querySelector('.edit-btn').addEventListener('click', () => openModal('task', t));
-                card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('tasks', t.id));
-
-                if (t.status === 'In Progress') inProgressCol.appendChild(card);
-                else if (t.status === 'Completed') completedCol.appendChild(card);
-                else notStartedCol.appendChild(card);
+                contentSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                document.getElementById(`${sectionId}-section`).classList.remove('hidden');
             });
-        }
-        
-        const renderNotes = (notes) => {
-            const list = document.getElementById('notes-list');
-            if (!list) return;
-            list.innerHTML = notes.length ? '' : '<p class="text-gray-500 col-span-full">Your mind is clear! Add a note to capture your thoughts.</p>';
-            notes.sort((a,b) => (b.pinned || false) - (a.pinned || false) || (b.updatedAt?.toDate() || 0) - (a.updatedAt?.toDate() || 0)).forEach(n => {
-                const card = document.createElement('div');
-                card.className = `note-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow flex flex-col h-64 ${n.pinned ? 'pinned' : ''}`;
-                card.innerHTML = `
-                    <div class="flex-1 overflow-hidden">
-                         <div class="flex justify-between items-center">
-                            <h4 class="font-bold text-lg truncate">${n.title}</h4>
-                            ${n.pinned ? '<svg class="w-5 h-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.868 2.884c.321-.772 1.305-.772 1.626 0l1.863 4.485c.08.194.26.328.469.349l4.95.719c.823.119 1.15 1.131.558 1.7L16.4 13.9c-.147.143-.215.349-.183.545l.865 4.93c.14 0.806-.714 1.423-1.442 1.021L12.1 18.25c-.193-.102-.428-.102-.622 0l-4.434 2.33c-.728.402-1.582-.215-1.442-1.02l.865-4.931c.032-.195-.036-.401-.183-.545L1.47 10.137c-.592-.57-.265-1.581.558-1.7l4.95-.719a.525.525 0 00.469-.35L9.309 2.884z" clip-rule="evenodd" /></svg>' : ''}
-                        </div>
-                        <p class="text-gray-600 dark:text-gray-400 mt-2 text-sm whitespace-pre-wrap break-words">${(n.content || '').substring(0, 200)}${n.content && n.content.length > 200 ? '...' : ''}</p>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs text-gray-500">
-                        <span>${n.updatedAt ? moment(n.updatedAt.toDate()).format('MMM D, h:mm A') : 'No date'}</span>
-                         <div class="flex items-center space-x-1">
-                             <button class="edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${n.id}"><svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg></button>
-                             <button class="delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${n.id}"><svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                         </div>
-                    </div>
-                `;
-                card.querySelector('.edit-btn').addEventListener('click', () => openModal('note', n));
-                card.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('notes', n.id));
-                list.appendChild(card);
-            });
-        }
-        
-        const renderReminders = (reminders) => {
-            const list = document.getElementById('reminders-list');
-            if (!list) return;
-            list.innerHTML = reminders.length ? '' : '<p class="text-gray-500">No upcoming reminders.</p>';
-            reminders.sort((a,b) => new Date(a.datetime) - new Date(b.datetime)).forEach(r => {
-                const item = document.createElement('div');
-                const isPast = moment(r.datetime).isBefore(moment());
-                item.className = `reminder-item bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between ${isPast ? 'opacity-60' : ''}`;
-                item.innerHTML = `
-                     <div class="flex-1">
-                        <p class="font-semibold text-lg ${isPast ? 'line-through' : ''}">${r.title}</p>
-                        <p class="text-sm text-blue-500 font-medium">${moment(r.datetime).format('dddd, MMMM Do YYYY, h:mm a')}</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">${moment(r.datetime).fromNow()}</p>
-                     </div>
-                     <div class="flex items-center space-x-2 ml-4">
-                        <button class="edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${r.id}"><svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"></path></svg></button>
-                        <button class="delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${r.id}"><svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    </div>
-                `;
-                item.querySelector('.edit-btn').addEventListener('click', () => openModal('reminder', r));
-                item.querySelector('.delete-btn').addEventListener('click', () => confirmDelete('reminders', r.id));
-                list.appendChild(item);
-            });
-        }
-        
-        // --- MODAL & FORM HANDLING ---
-        const modalContainer = document.getElementById('modal-container');
+        });
 
-        const openModal = (type, data = {}) => {
-            const template = document.getElementById('modal-template');
-            modalContainer.innerHTML = '';
-            modalContainer.appendChild(template.content.cloneNode(true));
+        // --- DATA FETCHING & RENDERING ---
+        function fetchAllData() {
+            if (!currentUserId) return;
+            const appId = 'work-management-app'; // Example App ID
 
-            const modal = modalContainer.querySelector('.fixed');
-            const modalContent = modalContainer.querySelector('div > div');
-            const modalTitle = modalContainer.querySelector('h3');
-            const form = modalContainer.querySelector('form');
-            
-            const isEditing = !!data.id;
-
-            if (type === 'confirm') {
-                modalTitle.textContent = data.title;
-                form.innerHTML = `<p class="dark:text-gray-300">${data.message}</p>
-                <div class="flex justify-end space-x-4 mt-6">
-                    <button type="button" class="close-modal-btn px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                    <button id="confirm-action-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Delete</button>
-                </div>`;
-                modal.querySelector('#confirm-action-btn').addEventListener('click', data.onConfirm);
-
-            } else {
-                 modalTitle.textContent = `${isEditing ? 'Edit' : 'Add'} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-                form.innerHTML = getFormFields(type, data);
-                form.innerHTML += `<button type="submit" class="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">${isEditing ? 'Save Changes' : `Add ${type}`}</button>`;
+            const collections = ['shortcuts', 'tasks', 'notes', 'reminders'];
+            collections.forEach(col => {
+                const q = query(collection(db, `artifacts/${appId}/users/${currentUserId}/${col}`), orderBy('createdAt', 'desc'));
                 
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    const itemData = Object.fromEntries(formData.entries());
-                    
-                    if(type === 'note') {
-                        itemData.updatedAt = new Date();
-                        itemData.pinned = form.pinned ? form.pinned.checked : false;
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    switch(col) {
+                        case 'shortcuts': allShortcuts = data; renderShortcuts(); break;
+                        case 'tasks': allTasks = data; renderTasks(); break;
+                        case 'notes': allNotes = data; renderNotes(); break;
+                        case 'reminders': allReminders = data; renderReminders(); break;
                     }
-
-                    if (isEditing) {
-                        updateItem(type + 's', data.id, itemData);
-                    } else {
-                        if(type === 'task') itemData.status = 'Not Started'; 
-                        addItem(type + 's', itemData);
-                    }
-                    closeModal();
+                    renderOverview(); // Update overview whenever any data changes
+                }, (error) => {
+                    console.error(`Error listening to ${col}:`, error);
                 });
-            }
-            
-            modalContainer.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModal));
-            modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
 
-            requestAnimationFrame(() => {
-                modal.classList.remove('opacity-0');
-                modalContent.classList.remove('opacity-0', '-translate-y-4');
+                // Store unsubscribe functions to call on logout
+                if (col === 'shortcuts') unsubscribeShortcuts = unsubscribe;
+                if (col === 'tasks') unsubscribeTasks = unsubscribe;
+                if (col === 'notes') unsubscribeNotes = unsubscribe;
+                if (col === 'reminders') unsubscribeReminders = unsubscribe;
             });
-        };
+        }
+        
+        // --- RENDER FUNCTIONS (Templates for each section) ---
 
-        const closeModal = () => {
-            const modal = modalContainer.querySelector('.fixed');
-            if(modal) {
-                 const modalContent = modal.querySelector('div > div');
-                 modalContent.classList.add('opacity-0', '-translate-y-4');
-                 modal.classList.add('opacity-0');
-                 setTimeout(() => { modalContainer.innerHTML = ''; }, 300);
-            }
-        };
+        function renderSection(sectionId, title, addButtonHTML, contentHTML) {
+            const container = document.getElementById(`${sectionId}-section`);
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold">${title}</h2>
+                    ${addButtonHTML}
+                </div>
+                ${contentHTML}
+            `;
+        }
+        
+        function renderShortcuts(shortcuts = allShortcuts) {
+             renderSection('shortcuts', 'Shortcuts', 
+                `<button onclick="openModal('shortcut')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Shortcut</button>`,
+                `<div id="shortcuts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${shortcuts.map(s => `
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between">
+                            <a href="${s.url}" target="_blank" class="flex items-center space-x-3 group">
+                                <img src="https://www.google.com/s2/favicons?domain=${s.url}&sz=32" alt="favicon" class="w-8 h-8">
+                                <span class="font-medium group-hover:text-indigo-500">${s.name}</span>
+                            </a>
+                            <button onclick="confirmDeleteItem('shortcuts', '${s.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>`
+            );
+        }
 
-        const getFormFields = (type, data) => {
-            const commonInputClasses = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500";
-            const commonLabelClasses = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
-            switch(type) {
+        function renderTasks(tasks = allTasks) {
+            const notStarted = tasks.filter(t => t.status === 'not-started');
+            const inProgress = tasks.filter(t => t.status === 'in-progress');
+            const completed = tasks.filter(t => t.status === 'completed');
+
+            const kanbanHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    ${renderKanbanColumn('Not Started', 'not-started', notStarted)}
+                    ${renderKanbanColumn('In Progress', 'in-progress', inProgress)}
+                    ${renderKanbanColumn('Completed', 'completed', completed)}
+                </div>
+            `;
+            
+            renderSection('tasks', 'Task Board', 
+                `<button onclick="openModal('task')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Task</button>`,
+                kanbanHTML
+            );
+            
+            // Add drag and drop event listeners after rendering
+            setupDragAndDrop();
+        }
+
+        function renderKanbanColumn(title, status, tasks) {
+            return `
+                <div class="bg-gray-200 dark:bg-gray-800 rounded-lg p-4">
+                    <h3 class="font-bold mb-4 text-lg">${title} (${tasks.length})</h3>
+                    <div class="kanban-column space-y-4" data-status="${status}">
+                        ${tasks.map(task => `
+                            <div class="task-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow cursor-grab" draggable="true" data-id="${task.id}">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-semibold">${task.title}</h4>
+                                    <span class="text-xs px-2 py-1 rounded-full ${getPriorityClass(task.priority)}">${task.priority}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${task.description}</p>
+                                <div class="text-xs text-gray-500 mt-3 flex justify-between items-center">
+                                    <span>Due: ${new Date(task.dueDate).toLocaleDateString()}</span>
+                                     <button onclick="confirmDeleteItem('tasks', '${task.id}')" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderNotes(notes = allNotes) {
+            renderSection('notes', 'Notes', 
+                `<button onclick="openModal('note')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Note</button>`,
+                `<div id="notes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${notes.map(n => `
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col h-full">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-semibold text-lg mb-2">${n.title}</h3>
+                                <div class="flex space-x-2">
+                                    <button onclick="togglePinNote('${n.id}', ${n.pinned || false})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 ${n.pinned ? 'text-yellow-500' : ''}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" /></svg>
+                                    </button>
+                                    <button onclick="confirmDeleteItem('notes', '${n.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 flex-grow">${n.content.replace(/\n/g, '<br>')}</p>
+                            <p class="text-xs text-gray-400 mt-4">${new Date(n.createdAt?.toDate()).toLocaleString()}</p>
+                        </div>
+                    `).join('')}
+                </div>`
+            );
+        }
+
+        function renderReminders(reminders = allReminders) {
+             renderSection('reminders', 'Reminders', 
+                `<button onclick="openModal('reminder')" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Add Reminder</button>`,
+                `<div id="reminders-list" class="space-y-3">
+                    ${reminders.map(r => `
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex items-center justify-between">
+                            <div>
+                                <p class="font-medium">${r.title}</p>
+                                <p class="text-sm text-gray-500">${new Date(r.dateTime).toLocaleString()}</p>
+                            </div>
+                             <button onclick="confirmDeleteItem('reminders', '${r.id}')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-red-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>`
+            );
+        }
+
+        function renderOverview() {
+            const container = document.getElementById('overview-section');
+            const activeTasks = allTasks.filter(t => t.status !== 'completed').length;
+            const upcomingReminders = allReminders.filter(r => new Date(r.dateTime) > new Date()).length;
+
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6">Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold">Active Tasks</h3>
+                        <p class="text-4xl font-bold text-indigo-500">${activeTasks}</p>
+                    </div>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold">Upcoming Reminders</h3>
+                        <p class="text-4xl font-bold text-green-500">${upcomingReminders}</p>
+                    </div>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold">Shortcuts</h3>
+                        <p class="text-4xl font-bold text-blue-500">${allShortcuts.length}</p>
+                    </div>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold">Notes</h3>
+                        <p class="text-4xl font-bold text-yellow-500">${allNotes.length}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProfile() {
+            const user = auth.currentUser;
+            if (!user) return;
+            renderSection('profile', 'Profile', '', `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow max-w-lg mx-auto">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
+                            <input type="text" id="displayName" value="${user.displayName || ''}" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <button id="updateNameBtn" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Update Name</button>
+                        </div>
+                        <div class="border-t dark:border-gray-600 pt-4">
+                             <label for="currentPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+                            <input type="password" id="currentPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            
+                            <label for="newPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mt-4">New Password</label>
+                            <input type="password" id="newPassword" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <button id="updatePasswordBtn" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Update Password</button>
+                            <p id="password-message" class="text-sm mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            document.getElementById('updateNameBtn').addEventListener('click', async () => {
+                const newName = document.getElementById('displayName').value;
+                if (newName && newName !== user.displayName) {
+                    await updateProfile(user, { displayName: newName });
+                    updateUserInfo(user);
+                    alert('Display name updated!');
+                }
+            });
+
+            document.getElementById('updatePasswordBtn').addEventListener('click', async () => {
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const messageEl = document.getElementById('password-message');
+                
+                if(!currentPassword || !newPassword) {
+                    messageEl.textContent = "Please fill in both password fields.";
+                    messageEl.className = 'text-sm mt-2 text-red-500';
+                    return;
+                }
+
+                try {
+                    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                    await reauthenticateWithCredential(user, credential);
+                    await updatePassword(user, newPassword);
+                    messageEl.textContent = 'Password updated successfully!';
+                    messageEl.className = 'text-sm mt-2 text-green-500';
+                } catch (error) {
+                    messageEl.textContent = `Error: ${error.message}`;
+                    messageEl.className = 'text-sm mt-2 text-red-500';
+                }
+            });
+        }
+        
+        // --- MODAL LOGIC ---
+        const modal = document.getElementById('item-modal');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const saveBtn = document.getElementById('modal-save-btn');
+        
+        function getFormHTML(type) {
+            switch (type) {
                 case 'shortcut':
                     return `
                         <div class="space-y-4">
-                            <div><label for="name" class="${commonLabelClasses}">Name</label><input type="text" id="name" name="name" value="${data.name || ''}" required class="${commonInputClasses}"></div>
-                            <div><label for="url" class="${commonLabelClasses}">URL</label><input type="url" id="url" name="url" value="${data.url || ''}" required class="${commonInputClasses}" placeholder="https://example.com"></div>
+                            <div>
+                                <label for="shortcutName" class="block text-sm font-medium">Name</label>
+                                <input type="text" id="shortcutName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="shortcutUrl" class="block text-sm font-medium">URL</label>
+                                <input type="url" id="shortcutUrl" placeholder="https://example.com" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                            </div>
                         </div>`;
                 case 'task':
-                    const isEditing = !!data.id;
                     return `
                         <div class="space-y-4">
-                            <div><label for="title" class="${commonLabelClasses}">Title</label><input type="text" id="title" name="title" value="${data.title || ''}" required class="${commonInputClasses}"></div>
-                            <div><label for="description" class="${commonLabelClasses}">Description</label><textarea id="description" name="description" class="${commonInputClasses}">${data.description || ''}</textarea></div>
-                            <div><label for="dueDate" class="${commonLabelClasses}">Due Date</label><input type="date" id="dueDate" name="dueDate" value="${data.dueDate || ''}" required class="${commonInputClasses}"></div>
-                            <div><label for="priority" class="${commonLabelClasses}">Priority</label>
-                                <select id="priority" name="priority" class="${commonInputClasses}">
-                                    <option value="Low" ${data.priority === 'Low' ? 'selected' : ''}>Low</option>
-                                    <option value="Medium" ${data.priority === 'Medium' ? 'selected' : ''}>Medium</option>
-                                    <option value="High" ${data.priority === 'High' ? 'selected' : ''}>High</option>
-                                </select>
+                            <div>
+                                <label for="taskTitle" class="block text-sm font-medium">Title</label>
+                                <input type="text" id="taskTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
                             </div>
-                             ${isEditing ? `<div><label for="status" class="${commonLabelClasses}">Status</label>
-                                <select id="status" name="status" class="${commonInputClasses}">
-                                    <option value="Not Started" ${data.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
-                                    <option value="In Progress" ${data.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                                    <option value="Completed" ${data.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                                </select>
-                            </div>` : ''}
+                             <div>
+                                <label for="taskDesc" class="block text-sm font-medium">Description</label>
+                                <textarea id="taskDesc" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="taskDueDate" class="block text-sm font-medium">Due Date</label>
+                                    <input type="date" id="taskDueDate" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label for="taskPriority" class="block text-sm font-medium">Priority</label>
+                                    <select id="taskPriority" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                                        <option>Low</option>
+                                        <option>Medium</option>
+                                        <option>High</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>`;
                 case 'note':
                     return `
                         <div class="space-y-4">
-                            <div><label for="title" class="${commonLabelClasses}">Title</label><input type="text" id="title" name="title" value="${data.title || ''}" required class="${commonInputClasses}"></div>
-                            <div><label for="content" class="${commonLabelClasses}">Content</label><textarea id="content" name="content" rows="6" class="${commonInputClasses}">${data.content || ''}</textarea></div>
-                             <div class="flex items-center">
-                                <input id="pinned" name="pinned" type="checkbox" ${data.pinned ? 'checked' : ''} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <label for="pinned" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Pin this note</label>
+                            <div>
+                                <label for="noteTitle" class="block text-sm font-medium">Title</label>
+                                <input type="text" id="noteTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                            </div>
+                             <div>
+                                <label for="noteContent" class="block text-sm font-medium">Content</label>
+                                <textarea id="noteContent" rows="5" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500"></textarea>
                             </div>
                         </div>`;
                 case 'reminder':
                     return `
                         <div class="space-y-4">
-                            <div><label for="title" class="${commonLabelClasses}">Title</label><input type="text" id="title" name="title" value="${data.title || ''}" required class="${commonInputClasses}"></div>
-                            <div><label for="datetime" class="${commonLabelClasses}">Date & Time</label><input type="datetime-local" id="datetime" name="datetime" value="${data.datetime || ''}" required class="${commonInputClasses}"></div>
+                            <div>
+                                <label for="reminderTitle" class="block text-sm font-medium">Title</label>
+                                <input type="text" id="reminderTitle" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="reminderDateTime" class="block text-sm font-medium">Date & Time</label>
+                                <input type="datetime-local" id="reminderDateTime" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                            </div>
                         </div>`;
+                default:
+                    return '';
             }
-            return '';
         }
         
-        // --- CRUD OPERATIONS ---
-        const getCollectionRef = (collectionName) => collection(db, `artifacts/${appId}/users/${currentUserId}/${collectionName}`);
+        window.openModal = (type) => {
+            modalTitle.textContent = `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            modalBody.innerHTML = getFormHTML(type);
+            saveBtn.onclick = () => saveItem(type);
+
+            modal.classList.remove('hidden', 'scale-95');
+            modalOverlay.classList.remove('hidden');
+            modal.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            modal.classList.add('scale-95');
+            modal.classList.add('hidden');
+            modalOverlay.classList.add('hidden');
+            modalBody.innerHTML = ''; // Clear content
+        }
+
+        document.getElementById('modal-close-btn').onclick = closeModal;
+        document.getElementById('modal-cancel-btn').onclick = closeModal;
+        modalOverlay.onclick = closeModal;
+
+        async function saveItem(type) {
+            if (!currentUserId) return;
+            const appId = 'work-management-app';
+            const collectionPath = `artifacts/${appId}/users/${currentUserId}/${type}s`;
+            let data = {
+                userId: currentUserId,
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                switch(type) {
+                    case 'shortcut':
+                        data.name = document.getElementById('shortcutName').value;
+                        data.url = document.getElementById('shortcutUrl').value;
+                        if (!data.name || !data.url) throw new Error("Name and URL are required.");
+                        break;
+                    case 'task':
+                        data.title = document.getElementById('taskTitle').value;
+                        data.description = document.getElementById('taskDesc').value;
+                        data.dueDate = document.getElementById('taskDueDate').value;
+                        data.priority = document.getElementById('taskPriority').value;
+                        data.status = 'not-started';
+                         if (!data.title || !data.dueDate) throw new Error("Title and due date are required.");
+                        break;
+                    case 'note':
+                        data.title = document.getElementById('noteTitle').value;
+                        data.content = document.getElementById('noteContent').value;
+                        data.pinned = false;
+                        if (!data.title) throw new Error("Title is required.");
+                        break;
+                    case 'reminder':
+                        data.title = document.getElementById('reminderTitle').value;
+                        data.dateTime = document.getElementById('reminderDateTime').value;
+                        if (!data.title || !data.dateTime) throw new Error("Title and date/time are required.");
+                        break;
+                }
+                
+                await addDoc(collection(db, collectionPath), data);
+                closeModal();
+            } catch (error) {
+                alert(`Error saving ${type}: ${error.message}`);
+                console.error("Error adding document: ", error);
+            }
+        }
+
+        // --- DELETE LOGIC ---
+        const deleteModal = document.getElementById('delete-confirm-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
         
-        const addItem = async (collectionName, data) => { if (!currentUserId) return; try { await addDoc(getCollectionRef(collectionName), data); } catch (e) { console.error("Error adding: ", e); } };
-        const updateItem = async (collectionName, id, data) => { if (!currentUserId) return; try { await updateDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/${collectionName}`, id), data); } catch (e) { console.error("Error updating: ", e); } };
-        const deleteItem = async (collectionName, id) => { if (!currentUserId) return; try { await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/${collectionName}`, id)); } catch (e) { console.error("Error deleting: ", e); } };
+        window.confirmDeleteItem = (collectionName, docId) => {
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+            
+            confirmDeleteBtn.onclick = async () => {
+                const appId = 'work-management-app';
+                const docRef = doc(db, `artifacts/${appId}/users/${currentUserId}/${collectionName}`, docId);
+                await deleteDoc(docRef);
+                closeDeleteModal();
+            };
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+        }
+        cancelDeleteBtn.onclick = closeDeleteModal;
+
+
+        // --- DARK MODE ---
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const sunIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+        const moonIcon = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
         
-        // --- TASK DRAG AND DROP ---
-        const setupDragAndDrop = () => {
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                darkModeToggle.innerHTML = sunIcon;
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkModeToggle.innerHTML = moonIcon;
+            }
+        };
+
+        // Load theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        darkModeToggle.addEventListener('click', () => {
+            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        // --- HELPERS ---
+        function getPriorityClass(priority) {
+            switch(priority?.toLowerCase()) {
+                case 'high': return 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200';
+                case 'medium': return 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200';
+                case 'low': return 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200';
+                default: return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200';
+            }
+        }
+
+        // --- DRAG AND DROP ---
+        function setupDragAndDrop() {
+            const tasks = document.querySelectorAll('.task-card');
             const columns = document.querySelectorAll('.kanban-column');
+            let draggedItem = null;
+
+            tasks.forEach(task => {
+                task.addEventListener('dragstart', () => {
+                    draggedItem = task;
+                    setTimeout(() => task.classList.add('dragging'), 0);
+                });
+                task.addEventListener('dragend', () => {
+                    task.classList.remove('dragging');
+                    draggedItem = null;
+                });
+            });
+
             columns.forEach(column => {
                 column.addEventListener('dragover', e => {
                     e.preventDefault();
-                    column.classList.add('drag-over');
                 });
-                column.addEventListener('dragleave', () => column.classList.remove('drag-over'));
-                column.addEventListener('drop', e => {
+                column.addEventListener('drop', async e => {
                     e.preventDefault();
-                    column.classList.remove('drag-over');
-                    const taskId = e.dataTransfer.getData('text/plain');
-                    const newStatus = column.dataset.status;
-                    const draggedElement = document.getElementById(`task-${taskId}`);
-                    if(draggedElement && draggedElement.parentElement !== column) {
-                         column.appendChild(draggedElement);
-                         updateItem('tasks', taskId, { status: newStatus });
+                    if (draggedItem) {
+                        column.appendChild(draggedItem);
+                        const taskId = draggedItem.dataset.id;
+                        const newStatus = column.dataset.status;
+                        const appId = 'work-management-app';
+                        const taskRef = doc(db, `artifacts/${appId}/users/${currentUserId}/tasks`, taskId);
+                        await updateDoc(taskRef, { status: newStatus });
                     }
                 });
             });
         }
         
-        // --- GLOBAL SEARCH ---
-        let searchTimeout;
-        searchBar.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            const searchTerm = e.target.value.toLowerCase().trim();
-            if(searchTerm.length > 2) {
-                searchTimeout = setTimeout(() => performGlobalSearch(searchTerm), 300);
-            } else if (searchTerm.length === 0) {
-                 navigateTo(window.location.hash || '#overview');
-            }
+        // Pin Note
+        window.togglePinNote = async (noteId, isPinned) => {
+            const appId = 'work-management-app';
+            const noteRef = doc(db, `artifacts/${appId}/users/${currentUserId}/notes`, noteId);
+            await updateDoc(noteRef, { pinned: !isPinned });
+        };
+        
+        // Global Search
+        document.getElementById('global-search').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            renderShortcuts(allShortcuts.filter(s => s.name.toLowerCase().includes(searchTerm)));
+            renderTasks(allTasks.filter(t => t.title.toLowerCase().includes(searchTerm) || t.description.toLowerCase().includes(searchTerm)));
+            renderNotes(allNotes.filter(n => n.title.toLowerCase().includes(searchTerm) || n.content.toLowerCase().includes(searchTerm)));
+            renderReminders(allReminders.filter(r => r.title.toLowerCase().includes(searchTerm)));
         });
 
-        const performGlobalSearch = (term) => {
-            const results = [];
-            allDataCache.shortcuts.forEach(s => { if(s.name.toLowerCase().includes(term) || s.url.toLowerCase().includes(term)) results.push({type: 'Shortcut', data: s}); });
-            allDataCache.tasks.forEach(t => { if((t.title && t.title.toLowerCase().includes(term)) || (t.description && t.description.toLowerCase().includes(term))) results.push({type: 'Task', data: t}); });
-            allDataCache.notes.forEach(n => { if((n.title && n.title.toLowerCase().includes(term)) || (n.content && n.content.toLowerCase().includes(term))) results.push({type: 'Note', data: n}); });
-            allDataCache.reminders.forEach(r => { if(r.title && r.title.toLowerCase().includes(term)) results.push({type: 'Reminder', data: r}); });
-            renderSearchResults(results, term);
-        };
-        
-        const renderSearchResults = (results, term) => {
-            renderSection('search-results');
-            document.getElementById('search-term-display').textContent = term;
-            const container = document.getElementById('search-results-container');
-            container.innerHTML = results.length ? '' : '<p class="text-gray-500">No results found.</p>';
-            
-            results.forEach(res => {
-                const div = document.createElement('div');
-                div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow';
-                let content = `<div class="flex justify-between items-center"><h4 class="font-bold">${res.data.title || res.data.name}</h4><span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700">${res.type}</span></div>`;
-                if(res.type === 'Shortcut') content += `<p class="text-sm text-gray-500 truncate">${res.data.url}</p>`;
-                if(res.type === 'Task') content += `<p class="text-sm text-gray-500">${res.data.description || ''}</p>`;
-                if(res.type === 'Note') content += `<p class="text-sm text-gray-500 truncate">${res.data.content || ''}</p>`;
-                div.innerHTML = content;
-                container.appendChild(div);
-            });
-        };
-        
-        // --- OVERVIEW & PROFILE ---
-        const renderOverview = () => {
-            const statsGrid = document.getElementById('stats-grid');
-            const remindersList = document.getElementById('overview-reminders-list');
-            const tasksProgress = document.getElementById('overview-tasks-progress');
-
-            if (!statsGrid) return;
-            
-            const activeTasks = allDataCache.tasks.filter(t => t.status !== 'Completed').length;
-            const upcomingReminders = allDataCache.reminders.filter(r => moment(r.datetime).isAfter(moment())).length;
-
-            statsGrid.innerHTML = `
-                <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><h4 class="text-gray-500 dark:text-gray-400">Active Tasks</h4><p class="text-3xl font-bold">${activeTasks}</p></div>
-                <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><h4 class="text-gray-500 dark:text-gray-400">Upcoming Reminders</h4><p class="text-3xl font-bold">${upcomingReminders}</p></div>
-                <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><h4 class="text-gray-500 dark:text-gray-400">Notes</h4><p class="text-3xl font-bold">${allDataCache.notes.length}</p></div>
-                <div class="stat-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><h4 class="text-gray-500 dark:text-gray-400">Shortcuts</h4><p class="text-3xl font-bold">${allDataCache.shortcuts.length}</p></div>
-            `;
-            
-            remindersList.innerHTML = '';
-            const sortedReminders = [...allDataCache.reminders]
-                .filter(r => moment(r.datetime).isAfter(moment()))
-                .sort((a,b) => new Date(a.datetime) - new Date(b.datetime))
-                .slice(0, 5);
-            
-            if(sortedReminders.length === 0) {
-                remindersList.innerHTML = '<p class="text-gray-500 text-sm">No upcoming reminders.</p>';
-            } else {
-                 sortedReminders.forEach(r => {
-                    const item = document.createElement('div');
-                    item.className = 'text-sm';
-                    item.innerHTML = `<p class="font-semibold">${r.title}</p><p class="text-gray-500 dark:text-gray-400">${moment(r.datetime).fromNow()}</p>`;
-                    remindersList.appendChild(item);
-                });
-            }
-
-            const weekStart = moment().startOf('week');
-            const tasksThisWeek = allDataCache.tasks.filter(t => moment(t.dueDate).isAfter(weekStart));
-            const completedThisWeek = tasksThisWeek.filter(t => t.status === 'Completed').length;
-            const progress = tasksThisWeek.length > 0 ? Math.round((completedThisWeek / tasksThisWeek.length) * 100) : 0;
-            
-            tasksProgress.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <p class="font-semibold">${completedThisWeek} of ${tasksThisWeek.length} tasks completed</p>
-                    <p class="font-bold text-lg">${progress}%</p>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                    <div class="bg-blue-600 h-4 rounded-full" style="width: ${progress}%"></div>
-                </div>
-            `;
-        };
-        
-        const renderProfile = () => {
-            const user = auth.currentUser;
-            if (!user) return;
-            
-            const profileForm = document.getElementById('profile-form');
-            const passwordForm = document.getElementById('password-form');
-            
-            document.getElementById('displayName').value = user.displayName || '';
-            document.getElementById('profile-email').textContent = user.email;
-
-            profileForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const newName = profileForm.displayName.value;
-                const successMsg = document.getElementById('profile-success');
-                try {
-                    await updateProfile(user, { displayName: newName });
-                    userDisplayName.textContent = newName;
-                    successMsg.textContent = "Profile updated successfully!";
-                    setTimeout(() => successMsg.textContent = '', 3000);
-                } catch(error) {
-                    console.error("Profile update error:", error);
-                }
-            });
-
-            passwordForm.addEventListener('submit', async (e) => {
-                 e.preventDefault();
-                 const newPassword = passwordForm.newPassword.value;
-                 const successMsg = document.getElementById('password-success');
-                 const errorMsg = document.getElementById('password-error');
-                 successMsg.textContent = '';
-                 errorMsg.textContent = '';
-                 
-                 try {
-                     await updatePassword(user, newPassword);
-                     successMsg.textContent = "Password updated successfully!";
-                     passwordForm.reset();
-                     setTimeout(() => successMsg.textContent = '', 3000);
-                 } catch (error) {
-                     console.error("Password update error:", error);
-                     errorMsg.textContent = "Error updating password. You may need to sign in again.";
-                 }
-            });
-        };
+        // Initial render of dynamic sections on load
+        renderProfile(); // Render profile section template
     </script>
 </body>
 </html>
